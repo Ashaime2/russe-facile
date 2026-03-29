@@ -4,9 +4,11 @@ import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Volume2, PlayCircle } from "lucide-react";
+import { AlphabetAudioQuiz, LetterTracing } from "@/components/exercises";
 
 const Alphabet = () => {
   const [activeLetterIndex, setActiveLetterIndex] = useState<number | null>(null);
+  const [showQuiz, setShowQuiz] = useState(false);
 
   const alphabet = [
     { cyrillic: "А", latin: "A", pronunciation: "a", example: "Анна (Anna)", sound: "/a/" },
@@ -44,24 +46,43 @@ const Alphabet = () => {
     { cyrillic: "Я", latin: "YA", pronunciation: "ya", example: "Я (Ya - je)", sound: "/ja/" },
   ];
 
-  const playSound = (letter: string) => {
-    // This would play actual audio in a real implementation
-    console.log(`Playing sound for: ${letter}`);
+  // Fonction de lecture audio utilisant l'API de synthèse vocale du navigateur.
+  const playSound = (text: string) => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices();
+      const ruVoice = voices.find((v) => v.lang && v.lang.startsWith("ru"));
+      if (ruVoice) {
+        utterance.voice = ruVoice;
+      } else {
+        utterance.lang = "ru-RU";
+      }
+      window.speechSynthesis.speak(utterance);
+    } else {
+      console.log(`Synthèse vocale non prise en charge : ${text}`);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-winter">
       <Navigation />
-      
       <div className="container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12 space-y-4 animate-fade-in">
             <h1 className="text-5xl font-bold">L'alphabet cyrillique</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Maîtrisez les 33 lettres de l'alphabet russe avec leur prononciation et des exemples
+              Maîtrisez les 33 lettres de l'alphabet russe avec leur prononciation et des exemples
             </p>
-            <Button variant="hero" className="gap-2">
+            <Button
+              variant="hero"
+              className="gap-2"
+              onClick={() => {
+                alphabet.forEach((l, i) => {
+                  setTimeout(() => playSound(l.cyrillic), i * 600);
+                });
+              }}
+            >
               <PlayCircle className="w-5 h-5" />
               Écouter tout l'alphabet
             </Button>
@@ -73,11 +94,10 @@ const Alphabet = () => {
               <Card
                 key={index}
                 onClick={() => setActiveLetterIndex(index)}
-                className={`p-6 text-center cursor-pointer transition-all duration-300 border-border ${
-                  activeLetterIndex === index
-                    ? 'shadow-glow border-primary bg-primary/5'
-                    : 'hover:shadow-soft hover:scale-105'
-                }`}
+                className={`p-6 text-center cursor-pointer transition-all duration-300 border-border ${activeLetterIndex === index
+                  ? "shadow-glow border-primary bg-primary/5"
+                  : "hover:shadow-soft hover:scale-105"
+                  }`}
               >
                 <div className="text-4xl font-bold text-primary mb-2">{letter.cyrillic}</div>
                 <div className="text-sm text-muted-foreground">{letter.latin}</div>
@@ -104,9 +124,16 @@ const Alphabet = () => {
                   <div className="text-center md:text-left">
                     <div className="text-8xl font-bold mb-4">{alphabet[activeLetterIndex].cyrillic}</div>
                     <div className="text-3xl mb-2">{alphabet[activeLetterIndex].latin}</div>
-                    <div className="text-xl opacity-90">Prononciation : {alphabet[activeLetterIndex].pronunciation}</div>
+                    <div className="text-xl opacity-90">
+                      Prononciation : {alphabet[activeLetterIndex].pronunciation}
+                    </div>
                   </div>
-                  <Button variant="accent" size="lg" className="w-full md:w-auto gap-2">
+                  <Button
+                    variant="accent"
+                    size="lg"
+                    className="w-full md:w-auto gap-2"
+                    onClick={() => playSound(alphabet[activeLetterIndex].cyrillic)}
+                  >
                     <Volume2 className="w-5 h-5" />
                     Écouter la lettre
                   </Button>
@@ -120,7 +147,12 @@ const Alphabet = () => {
                   <div>
                     <h3 className="text-2xl font-semibold mb-2">Exemple</h3>
                     <p className="text-2xl opacity-90 mb-2">{alphabet[activeLetterIndex].example}</p>
-                    <Button variant="outline" size="sm" className="gap-2 bg-primary-foreground/10 hover:bg-primary-foreground/20 border-primary-foreground/30">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 bg-primary-foreground/10 hover:bg-primary-foreground/20 border-primary-foreground/30"
+                      onClick={() => playSound(alphabet[activeLetterIndex].example)}
+                    >
                       <Volume2 className="w-4 h-4" />
                       Écouter l'exemple
                     </Button>
@@ -130,22 +162,77 @@ const Alphabet = () => {
             </Card>
           )}
 
+          {/* Quiz Section */}
+          <div className="mt-16">
+            <Card className="p-8 border-border">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    🎧 Quiz Audio
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Testez votre reconnaissance des lettres cyrilliques
+                  </p>
+                </div>
+                <Button
+                  variant={showQuiz ? "outline" : "hero"}
+                  onClick={() => setShowQuiz(!showQuiz)}
+                >
+                  {showQuiz ? "Masquer le quiz" : "Commencer le quiz"}
+                </Button>
+              </div>
+
+              {showQuiz && (
+                <AlphabetAudioQuiz
+                  letters={alphabet.map((l) => ({
+                    letter: l.cyrillic,
+                    sound: l.cyrillic,
+                    name: l.pronunciation,
+                  }))}
+                  onComplete={(score, total) => {
+                    console.log(`Quiz terminé: ${score}/${total}`);
+                  }}
+                />
+              )}
+            </Card>
+          </div>
+
+          {/* Letter Tracing Section */}
+          <div className="mt-16">
+            <Card className="p-8 border-border">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  ✍️ Tracé de lettres
+                </h2>
+                <p className="text-muted-foreground">
+                  Entraînez-vous à tracer les lettres cyrilliques avec le doigt ou la souris
+                </p>
+              </div>
+              <LetterTracing
+                letters={alphabet.map((l) => ({
+                  cyrillic: l.cyrillic,
+                  name: l.pronunciation,
+                }))}
+              />
+            </Card>
+          </div>
+
           {/* Tips Section */}
           <div className="mt-16 grid md:grid-cols-3 gap-6">
             <Card className="p-6 border-border">
-              <h3 className="text-xl font-semibold mb-3 text-primary">💡 Conseil #1</h3>
+              <h3 className="text-xl font-semibold mb-3 text-primary">Conseil #1</h3>
               <p className="text-muted-foreground">
                 Écoutez chaque lettre plusieurs fois et répétez à voix haute pour mémoriser la prononciation
               </p>
             </Card>
             <Card className="p-6 border-border">
-              <h3 className="text-xl font-semibold mb-3 text-primary">💡 Conseil #2</h3>
+              <h3 className="text-xl font-semibold mb-3 text-primary">Conseil #2</h3>
               <p className="text-muted-foreground">
-                Certaines lettres ressemblent au latin mais se prononcent différemment (В = V, Н = N, Р = R)
+                Certaines lettres ressemblent au latin mais se prononcent différemment (В = V, Н = N, Р = R)
               </p>
             </Card>
             <Card className="p-6 border-border">
-              <h3 className="text-xl font-semibold mb-3 text-primary">💡 Conseil #3</h3>
+              <h3 className="text-xl font-semibold mb-3 text-primary">Conseil #3</h3>
               <p className="text-muted-foreground">
                 Pratiquez l'écriture en même temps que la prononciation pour une meilleure mémorisation
               </p>
@@ -153,7 +240,6 @@ const Alphabet = () => {
           </div>
         </div>
       </div>
-
       <Footer />
     </div>
   );

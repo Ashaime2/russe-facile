@@ -1,73 +1,30 @@
-# Welcome to your Lovable project
+# RussoAcadémie – Apprendre le russe pas à pas
 
-## Project info
+Ce dépôt contient le code source du site d’apprentissage du russe **RussoAcadémie**, réalisé avec **React**, **TypeScript**, **Vite**, **shadcn‑ui** et **Tailwind CSS**. Le projet vous permet de découvrir le russe à travers des leçons progressives, l’apprentissage de l’alphabet cyrillique et des articles culturels. Ce site n’est plus rattaché à la plateforme Lovable et est désormais auto‑hébergé.
 
-**URL**: https://lovable.dev/projects/450823e8-195c-4996-a950-577ba7dae9d6
+## Démarrer en local
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/450823e8-195c-4996-a950-577ba7dae9d6) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Pour tester l’application en local sur votre machine :
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Clonez le dépôt (remplacez par l’URL de votre fork le cas échéant)
+git clone <URL_DU_DEPOT>
+cd russe-facile-monde
+# Installez les dépendances
+npm install
+# Démarrez le serveur de développement
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Un serveur de développement Vite s’ouvrira généralement sur `http://localhost:5173/`. Les modifications apportées aux fichiers se rechargent automatiquement.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Structure du projet
 
-**Use GitHub Codespaces**
+- `src/pages` : contient les pages principales du site (`Home.tsx`, `Courses.tsx`, `Alphabet.tsx`, `Culture.tsx`, `Dashboard.tsx`, etc.).
+- `src/components` : regroupe les composants réutilisables comme la barre de navigation (`Navigation.tsx`) et le pied de page (`Footer.tsx`).
+- `src/assets` : héberge les images utilisées dans l’interface.
+- `public/centralelille-logo.png` : logo de l’École Centrale de Lille utilisé dans la navigation et le pied de page.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Licence
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/450823e8-195c-4996-a950-577ba7dae9d6) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Ce projet est mis à disposition sous licence libre. Reportez‑vous au fichier `LICENSE` pour plus de détails.

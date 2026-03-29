@@ -1,62 +1,72 @@
 import { Link } from "react-router-dom";
-import { Mail, Facebook, Twitter, Instagram } from "lucide-react";
+import logoCentrale from "@/assets/logo_centrale.png";
 
+/**
+ * Pied de page simple et sobre
+ */
 const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
+  const quickLinks = [
+    { label: "Cours", path: "/courses" },
+    { label: "Alphabet", path: "/alphabet" },
+    { label: "Culture", path: "/culture" },
+    { label: "Mon Espace", path: "/dashboard" },
+  ];
+
   return (
-    <footer className="bg-card border-t border-border mt-20">
+    <footer className="bg-gradient-to-b from-background to-muted/30 border-t border-border mt-20">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <span className="text-sm font-bold text-primary-foreground">РУ</span>
-              </div>
-              <span className="text-lg font-bold">RussoAcadémie</span>
+        {/* Contenu principal */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-8">
+          {/* Logo et description */}
+          <div className="flex items-center gap-4">
+            <img
+              src={logoCentrale}
+              alt="École Centrale de Lille"
+              className="w-12 h-12 object-contain"
+            />
+            <div>
+              <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Défi G1‑G2
+              </span>
+              <p className="text-sm text-muted-foreground">
+                Apprenez le russe simplement
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Apprenez le russe pas à pas, simplement et avec plaisir.
-            </p>
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-4">Apprendre</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/courses" className="hover:text-primary transition-colors">Cours</Link></li>
-              <li><Link to="/alphabet" className="hover:text-primary transition-colors">Alphabet</Link></li>
-              <li><Link to="/culture" className="hover:text-primary transition-colors">Culture</Link></li>
-            </ul>
-          </div>
+          {/* Liens rapides */}
+          <nav className="flex flex-wrap justify-center gap-6">
+            {quickLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
-          <div>
-            <h3 className="font-semibold mb-4">À propos</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/about" className="hover:text-primary transition-colors">Notre mission</Link></li>
-              <li><Link to="/about" className="hover:text-primary transition-colors">L'équipe</Link></li>
-              <li><Link to="/about" className="hover:text-primary transition-colors">Contact</Link></li>
-            </ul>
+        {/* Séparateur décoratif */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border" />
           </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">Nous suivre</h3>
-            <div className="flex gap-3">
-              <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Facebook className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Twitter className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a href="mailto:contact@russoacademie.fr" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Mail className="w-4 h-4" />
-              </a>
-            </div>
+          <div className="relative flex justify-center">
+            <span className="bg-background px-4 text-muted-foreground">
+              🇷🇺
+            </span>
           </div>
         </div>
 
-        <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2025 RussoAcadémie. Tous droits réservés.</p>
+        {/* Copyright */}
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          <p>
+            © {currentYear} Défi G1‑G2 · Un projet étudiant — Hugo Delplanque
+          </p>
         </div>
       </div>
     </footer>

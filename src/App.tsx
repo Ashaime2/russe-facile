@@ -10,6 +10,15 @@ import Culture from "./pages/Culture";
 import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import Article from "./pages/Article";
+import Vocabulary from "./pages/Vocabulary";
+import MyFlashcards from "./pages/MyFlashcards";
+
+// Import de la nouvelle page « PremiersMots »
+import PremiersMots from "./pages/PremiersMots";
+
+// Import de la page de leçons interactives
+import InteractiveLesson from "./pages/InteractiveLesson";
 
 const queryClient = new QueryClient();
 
@@ -23,10 +32,17 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/alphabet" element={<Alphabet />} />
+          <Route path="/vocabulary" element={<Vocabulary />} />
+          <Route path="/my-flashcards" element={<MyFlashcards />} />
           <Route path="/culture" element={<Culture />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/about" element={<About />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/article/:id" element={<Article />} />
+          {/* Page de cours interactif pour le module « Premiers pas » */}
+          <Route path="/lesson/1-1" element={<PremiersMots />} />
+          {/* Page de leçons interactives avec exercices (route dynamique) */}
+          <Route path="/lesson/:id" element={<InteractiveLesson />} />
+          {/* Ajouter toutes les routes personnalisées au dessus de la route catch‑all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
