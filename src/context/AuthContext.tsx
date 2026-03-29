@@ -12,8 +12,8 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, pass: string) => Promise<void>;
-  signUp: (name: string, email: string, pass: string) => Promise<void>;
+  signIn: (email: string, pass: string) => Promise<boolean>;
+  signUp: (name: string, email: string, pass: string) => Promise<boolean>;
   signOut: () => Promise<void>;
 }
 
@@ -100,8 +100,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(mappedUser);
     toast.success(`Heureux de vous revoir !`);
     
+    
     // Hard redirect pour réinitialiser complètement l'application et les hooks locaux
     window.location.href = '/dashboard';
+    return true;
   };
 
   const signUp = async (name: string, email: string, pass: string) => {
@@ -127,9 +129,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(mapSupabaseUser(data.user));
       toast.success("Votre compte a été créé avec succès.");
       window.location.href = '/dashboard';
+      return true;
     } else {
       // Cas où email confirmation API est activée sur Supabase
       toast.success("Inscription réussie ! Regardez votre boîte mail (Spam inclus) pour confirmer.");
+      return false;
     }
   };
 
