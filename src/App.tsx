@@ -17,7 +17,11 @@ import MyFlashcards from "./pages/MyFlashcards";
 // Import de la nouvelle page « PremiersMots »
 import PremiersMots from "./pages/PremiersMots";
 
-// Import de la page de leçons interactives
+// Import du système d'authentification
+import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import Auth from "./pages/Auth";
+
 import InteractiveLesson from "./pages/InteractiveLesson";
 
 const queryClient = new QueryClient();
@@ -27,25 +31,30 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/courses" element={<Courses />} />
-          <Route path="/alphabet" element={<Alphabet />} />
-          <Route path="/vocabulary" element={<Vocabulary />} />
-          <Route path="/my-flashcards" element={<MyFlashcards />} />
-          <Route path="/culture" element={<Culture />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/article/:id" element={<Article />} />
-          {/* Page de cours interactif pour le module « Premiers pas » */}
-          <Route path="/lesson/1-1" element={<PremiersMots />} />
-          {/* Page de leçons interactives avec exercices (route dynamique) */}
-          <Route path="/lesson/:id" element={<InteractiveLesson />} />
-          {/* Ajouter toutes les routes personnalisées au dessus de la route catch‑all */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Routes publiques */}
+            <Route path="/" element={<Home />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/alphabet" element={<Alphabet />} />
+            <Route path="/vocabulary" element={<Vocabulary />} />
+            <Route path="/culture" element={<Culture />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/article/:id" element={<Article />} />
+            
+            {/* Routes protégées (nécessitent d'être connecté) */}
+            <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/my-flashcards" element={<ProtectedRoute><MyFlashcards /></ProtectedRoute>} />
+            <Route path="/lesson/1-1" element={<ProtectedRoute><PremiersMots /></ProtectedRoute>} />
+            <Route path="/lesson/:id" element={<ProtectedRoute><InteractiveLesson /></ProtectedRoute>} />
+            
+            {/* Page non trouvée */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

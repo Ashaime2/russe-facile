@@ -3,7 +3,17 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Languages, Globe, User, Home, Menu, X, Moon, Sun } from "lucide-react";
 import { useProgress } from "@/hooks/useProgress";
+import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "next-themes";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import logoCentrale from "@/assets/logo_centrale.png";
 
 /**
@@ -17,6 +27,7 @@ const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { progress } = useProgress();
+  const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -124,16 +135,46 @@ const Navigation = () => {
               </Button>
             )}
 
-            <Link to="/courses" className="hidden sm:block">
-              <Button
-                variant="hero"
-                size="sm"
-                className="relative overflow-hidden group"
-              >
-                <span className="relative z-10">Commencer</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity" />
-              </Button>
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                        {user.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="cursor-pointer">Mon Espace</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">
+                    Déconnexion
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth" className="hidden sm:block">
+                <Button
+                  variant="hero"
+                  size="sm"
+                  className="relative overflow-hidden group"
+                >
+                  <span className="relative z-10">Connexion</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Button>
+              </Link>
+            )}
 
             {/* Bouton menu mobile */}
             <Button
@@ -203,11 +244,17 @@ const Navigation = () => {
 
             {/* CTA mobile */}
             <div className="pt-4 border-t border-border mt-4">
-              <Link to="/courses">
-                <Button variant="hero" className="w-full" size="lg">
-                  Commencer l'apprentissage
+              {user ? (
+                <Button variant="outline" className="w-full text-destructive" size="lg" onClick={() => { signOut(); setIsMobileMenuOpen(false); }}>
+                  Déconnexion
                 </Button>
-              </Link>
+              ) : (
+                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="hero" className="w-full" size="lg">
+                    Se connecter / S'inscrire
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
