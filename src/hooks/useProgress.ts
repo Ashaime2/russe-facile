@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
 
 /**
  * Types pour le stockage de la progression
@@ -58,16 +57,6 @@ export const useProgress = () => {
         if (typeof window !== "undefined") {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-                
-                // Synchronisation asynchrone en arrière-plan avec Supabase
-                supabase.auth.getSession().then(({ data }) => {
-                    if (data.session?.user) {
-                        supabase.from('profiles').upsert({
-                            id: data.session.user.id,
-                            progress_data: progress,
-                        }).then();
-                    }
-                });
             } catch (e) {
                 console.error("Erreur lors de la sauvegarde de la progression:", e);
             }

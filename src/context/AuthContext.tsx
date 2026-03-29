@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
@@ -12,149 +10,80 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, pass: string) => Promise<boolean>;
-  signUp: (name: string, email: string, pass: string) => Promise<boolean>;
-  signOut: () => Promise<void>;
+  signIn: (email: string, pass: string) => Promise<void>;
+  signUp: (name: string, email: string, pass: string) => Promise<void>;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const mapSupabaseUser = (user: SupabaseUser | null): User | null => {
-  if (!user) return null;
-  return {
-    id: user.id,
-    email: user.email || '',
-    name: user.user_metadata?.name || user.email?.split('@')[0] || 'Apprenant(e)',
-  };
-};
+// Clés pour notre fausse base de données locale
+const USERS_KEY = "russe-facile-users-db";
+const SESSION_KEY = "russe-facile-session";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Hydratation des données Cloud vers LocalStorage
-  const hydrateFromCloud = async (userId: string) => {
-    try {
-      const { data, error } = await supabase.from('profiles').select('progress_data, flashcards_data').eq('id', userId).single();
-      if (data) {
-        if (data.progress_data && Object.keys(data.progress_data).length > 0) {
-          localStorage.setItem('russe-facile-progress', JSON.stringify(data.progress_data));
-        }
-        if (data.flashcards_data && data.flashcards_data.length > 0) {
-          localStorage.setItem('russe-facile-my-flashcards', JSON.stringify(data.flashcards_data));
-        }
-      }
-    } catch (err) {
-      console.error("Erreur d'hydratation", err);
-    }
-  };
-
-  // Initialisation et vérification de la session
   useEffect(() => {
-    const initSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        if (session?.user) {
-          await hydrateFromCloud(session.user.id);
-        }
-        setUser(mapSupabaseUser(session?.user ?? null));
-      } catch (e: any) {
-        console.error("Erreur de session:", e.message);
-      } finally {
-        setLoading(false);
+    try {
+      const sessionData = localStorage.getItem(SESSION_KEY);
+      if (sessionData) {
+        setUser(JSON.parse(sessionData));
       }
-    };
-
-    initSession();
-
-    // Écoute des changements de session (ex: connexion depuis un autre onglet)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        if (session?.user && _event === 'SIGNED_IN') {
-           await hydrateFromCloud(session.user.id);
-        }
-        setUser(mapSupabaseUser(session?.user ?? null));
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    } catch (e) {
+      console.error("Erreur de session:", e);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  // Simulation d'une latence réseau pour le réalisme
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
   const signIn = async (email: string, pass: string) => {
-    console.log("[Auth] signIn started", { email });
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password: pass,
-    });
-    console.log("[Auth] signIn Supabase response", { data, error });
+    await delay(800);
+    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    const foundUser = users.find((u: any) => u.email === email && u.password === pass);
     
-    if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        throw new Error("Email ou mot de passe incorrect");
-      }
-      throw new Error(error.message);
+    if (!foundUser) {
+      throw new Error("Email ou mot de passe incorrect");
     }
-    
-    console.log("[Auth] Mapping user...");
-    const mappedUser = mapSupabaseUser(data.user);
-    console.log("[Auth] Hydrating from cloud...");
-    await hydrateFromCloud(data.user.id);
-    console.log("[Auth] Setting user state...");
-    setUser(mappedUser);
+
+    const sessionUser = { id: foundUser.id, name: foundUser.name, email: foundUser.email };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
+    setUser(sessionUser);
     toast.success(`Heureux de vous revoir !`);
     
-    console.log("[Auth] signIn finished successfully");
-    return true;
+    // Redimensionnement/Redirection fluide
+    window.location.href = '/dashboard';
   };
 
   const signUp = async (name: string, email: string, pass: string) => {
-    console.log("[Auth] signUp started", { name, email });
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password: pass,
-      options: {
-        data: {
-          name: name,
-        }
-      }
-    });
-    console.log("[Auth] signUp Supabase response", { data, error });
-
-    if (error) {
-      if (error.message.includes('already registered')) {
-        throw new Error("Un compte existe déjà avec cette adresse email");
-      }
-      throw new Error(error.message);
+    await delay(1000);
+    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    
+    if (users.find((u: any) => u.email === email)) {
+      throw new Error("Un compte existe déjà avec cette adresse email");
     }
 
-    if (data.session) {
-      console.log("[Auth] Session present, hydrating...");
-      await hydrateFromCloud(data.user!.id);
-      console.log("[Auth] Setting user state...");
-      setUser(mapSupabaseUser(data.user));
-      toast.success("Votre compte a été créé avec succès.");
-      console.log("[Auth] signUp finished successfully");
-      return true;
-    } else {
-      console.log("[Auth] No session (Email confirmation required)");
-      // Cas où email confirmation API est activée sur Supabase
-      toast.success("Inscription réussie ! Regardez votre boîte mail (Spam inclus) pour confirmer.");
-      return false;
-    }
+    const newUser = { id: Date.now().toString(), name, email, password: pass };
+    users.push(newUser);
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+    const sessionUser = { id: newUser.id, name: newUser.name, email: newUser.email };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
+    setUser(sessionUser);
+    toast.success("Votre compte a été créé avec succès.");
+    
+    window.location.href = '/dashboard';
   };
 
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error("Erreur lors de la déconnexion");
-      console.error(error);
-    } else {
-      setUser(null);
-      toast.success("Vous êtes maintenant déconnecté");
-      window.location.href = '/';
-    }
+  const signOut = () => {
+    localStorage.removeItem(SESSION_KEY);
+    setUser(null);
+    toast.success("Vous êtes maintenant déconnecté");
+    window.location.href = '/';
   };
 
   return (

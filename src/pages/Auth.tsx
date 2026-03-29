@@ -51,14 +51,11 @@ export default function Auth() {
   const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
-      const redirected = await signIn(values.email, values.password);
-      if (redirected) {
-        navigate(from, { replace: true });
-      } else {
-        setIsLoading(false);
-      }
+      await signIn(values.email, values.password);
+      navigate(from, { replace: true });
     } catch (error: any) {
       loginForm.setError("root", { message: error.message });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -66,14 +63,11 @@ export default function Auth() {
   const onRegisterSubmit = async (values: z.infer<typeof registerSchema>) => {
     setIsLoading(true);
     try {
-      const redirected = await signUp(values.name, values.email, values.password);
-      if (redirected) {
-        navigate(from, { replace: true });
-      } else {
-        setIsLoading(false);
-      }
+      await signUp(values.name, values.email, values.password);
+      navigate(from, { replace: true });
     } catch (error: any) {
       registerForm.setError("root", { message: error.message });
+    } finally {
       setIsLoading(false);
     }
   };
