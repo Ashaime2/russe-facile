@@ -98,12 +98,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const mappedUser = mapSupabaseUser(data.user);
     await hydrateFromCloud(data.user.id);
     setUser(mappedUser);
-    toast.success(`Heureux de vous revoir, ${mappedUser?.name || ''} !`);
+    toast.success(`Heureux de vous revoir !`);
     
-    // Forcer le rechargement pour que les hooks lisent le localStorage mis à jour
-    setTimeout(() => {
-        window.location.reload();
-    }, 1000);
+    // Hard redirect pour réinitialiser complètement l'application et les hooks locaux
+    window.location.href = '/dashboard';
   };
 
   const signUp = async (name: string, email: string, pass: string) => {
@@ -127,13 +125,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (data.session) {
       await hydrateFromCloud(data.user!.id);
       setUser(mapSupabaseUser(data.user));
-      toast.success("Votre compte a été créé avec succès. L'aventure commence !");
-      setTimeout(() => {
-          window.location.reload();
-      }, 1000);
+      toast.success("Votre compte a été créé avec succès.");
+      window.location.href = '/dashboard';
     } else {
       // Cas où email confirmation API est activée sur Supabase
-      toast.success("Inscription réussie ! Veuillez vérifier votre boîte mail.");
+      toast.success("Inscription réussie ! Regardez votre boîte mail (Spam inclus) pour confirmer.");
     }
   };
 
@@ -144,14 +140,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error(error);
     } else {
       setUser(null);
-      // Optionnel : ne pas effacer le localstorage pour garder l'accès hors ligne,
-      // ou l'effacer pour plus de sécurité selon le cas.
-      // localStorage.removeItem('russe-facile-progress');
-      // localStorage.removeItem('russe-facile-my-flashcards');
       toast.success("Vous êtes maintenant déconnecté");
-      setTimeout(() => {
-          window.location.reload();
-      }, 1000);
+      window.location.href = '/';
     }
   };
 
