@@ -34,7 +34,7 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Routes publiques */}
+            {/* Routes publiques (ouvertes pour la démo) */}
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/alphabet" element={<Alphabet />} />
@@ -42,13 +42,13 @@ const App = () => (
             <Route path="/culture" element={<Culture />} />
             <Route path="/about" element={<About />} />
             <Route path="/article/:id" element={<Article />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/my-flashcards" element={<MyFlashcards />} />
+            <Route path="/lesson/1-1" element={<PremiersMots />} />
+            <Route path="/lesson/:id" element={<InteractiveLesson />} />
             
-            {/* Routes protégées (nécessitent d'être connecté) */}
-            <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
+            {/* Routes protégées (optionnel pour la démo) */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/my-flashcards" element={<ProtectedRoute><MyFlashcards /></ProtectedRoute>} />
-            <Route path="/lesson/1-1" element={<ProtectedRoute><PremiersMots /></ProtectedRoute>} />
-            <Route path="/lesson/:id" element={<ProtectedRoute><InteractiveLesson /></ProtectedRoute>} />
             
             {/* Page non trouvée */}
             <Route path="*" element={<NotFound />} />
