@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
 
 /**
  * Types pour le stockage de la progression
@@ -52,13 +53,23 @@ export const useProgress = () => {
         return { modules: {}, totalLessonsCompleted: 0 };
     });
 
-    // Sauvegarder dans localStorage à chaque changement
+    // Sauvegarder dans localStorage + Sync Cloud (Async)
     useEffect(() => {
         if (typeof window !== "undefined") {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+                
+                // Synchronisation Cloud en arrière-plan
+                supabase.auth.getSession().then(({ data }) => {
+                    if (data.session?.user) {
+                        supabase.from('profiles').upsert({
+                            id: data.session.user.id,
+                            progress_data: progress,
+                        }).then();
+                    }
+                });
             } catch (e) {
-                console.error("Erreur lors de la sauvegarde de la progression:", e);
+                console.error("Erreur de sauvegarde:", e);
             }
         }
     }, [progress]);

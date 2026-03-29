@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
 
 /**
  * Interface pour une flashcard personnalisée
@@ -33,13 +34,23 @@ export const useMyFlashcards = () => {
         return [];
     });
 
-    // Sauvegarder dans localStorage à chaque changement
+    // Sauvegarder dans localStorage + Sync Cloud (Async)
     useEffect(() => {
         if (typeof window !== "undefined") {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(flashcards));
+                
+                // Synchronisation Cloud en arrière-plan
+                supabase.auth.getSession().then(({ data }) => {
+                    if (data.session?.user) {
+                        supabase.from('profiles').upsert({
+                            id: data.session.user.id,
+                            flashcards_data: flashcards,
+                        }).then();
+                    }
+                });
             } catch (e) {
-                console.error("Erreur lors de la sauvegarde des flashcards:", e);
+                console.error("Erreur de sauvegarde:", e);
             }
         }
     }, [flashcards]);

@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
@@ -12,78 +14,109 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
   signUp: (name: string, email: string, pass: string) => Promise<void>;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Clés pour notre fausse base de données locale
-const USERS_KEY = "russe-facile-users-db";
-const SESSION_KEY = "russe-facile-session";
+const mapSupabaseUser = (user: SupabaseUser | null): User | null => {
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email || '',
+    name: user.user_metadata?.name || user.email?.split('@')[0] || 'Apprenant(e)',
+  };
+};
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  // Sync Cloud -> Local en tâche de fond (non-bloquant)
+  const syncCloudData = async (userId: string) => {
     try {
-      const sessionData = localStorage.getItem(SESSION_KEY);
-      if (sessionData) {
-        setUser(JSON.parse(sessionData));
+      // On récupère les données dans le Cloud
+      const { data, error } = await supabase.from('profiles').select('progress_data, flashcards_data').eq('id', userId).single();
+      
+      if (data) {
+        // On fusionne/met à jour le localStorage local pour que le reste de l'app en profite
+        if (data.progress_data && Object.keys(data.progress_data).length > 0) {
+          localStorage.setItem('russe-facile-progress', JSON.stringify(data.progress_data));
+        }
+        if (data.flashcards_data && data.flashcards_data.length > 0) {
+          localStorage.setItem('russe-facile-my-flashcards', JSON.stringify(data.flashcards_data));
+        }
       }
-    } catch (e) {
-      console.error("Erreur de session:", e);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.warn("Sync en arrière-plan indisponible", err);
     }
+  };
+
+  useEffect(() => {
+    // 1. Initialisation rapide
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const nextUser = mapSupabaseUser(session?.user ?? null);
+        setUser(nextUser);
+        
+        if (session?.user) {
+          // Sync silencieuse
+          syncCloudData(session.user.id);
+        }
+      } catch (e: any) {
+        console.error("Session init error:", e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initSession();
+
+    // 2. Écouteur de changements (Connexion/Déconnexion)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const nextUser = mapSupabaseUser(session?.user ?? null);
+      setUser(nextUser);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        syncCloudData(session.user.id);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // Simulation d'une latence réseau pour le réalisme
-  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
   const signIn = async (email: string, pass: string) => {
-    await delay(800);
-    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-    const foundUser = users.find((u: any) => u.email === email && u.password === pass);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
     
-    if (!foundUser) {
-      throw new Error("Email ou mot de passe incorrect");
-    }
-
-    const sessionUser = { id: foundUser.id, name: foundUser.name, email: foundUser.email };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-    setUser(sessionUser);
-    toast.success(`Heureux de vous revoir !`);
+    if (error) throw new Error(error.message === 'Invalid login credentials' ? "Email ou mot de passe incorrect" : error.message);
     
-    // Redimensionnement/Redirection fluide
-    window.location.href = '/dashboard';
+    // Le onAuthStateChange s'occupera du setUser et du sync
+    toast.success("Heureux de vous revoir !");
   };
 
   const signUp = async (name: string, email: string, pass: string) => {
-    await delay(1000);
-    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-    
-    if (users.find((u: any) => u.email === email)) {
-      throw new Error("Un compte existe déjà avec cette adresse email");
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: pass,
+      options: { data: { name } }
+    });
+
+    if (error) throw new Error(error.message.includes('already registered') ? "Un compte existe déjà" : error.message);
+
+    if (data.session) {
+      toast.success("Compte créé avec succès !");
+    } else {
+      toast.success("Vérifiez vos emails pour confirmer votre compte.");
     }
-
-    const newUser = { id: Date.now().toString(), name, email, password: pass };
-    users.push(newUser);
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-
-    const sessionUser = { id: newUser.id, name: newUser.name, email: newUser.email };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-    setUser(sessionUser);
-    toast.success("Votre compte a été créé avec succès.");
-    
-    window.location.href = '/dashboard';
   };
 
-  const signOut = () => {
-    localStorage.removeItem(SESSION_KEY);
+  const signOut = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    toast.success("Vous êtes maintenant déconnecté");
-    window.location.href = '/';
+    toast.success("Déconnexion réussie");
   };
 
   return (
@@ -95,8 +128,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth doit être utilisé à l'intérieur d'un AuthProvider");
-  }
+  if (context === undefined) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };
