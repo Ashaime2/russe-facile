@@ -52,7 +52,11 @@ export default function Auth() {
     setIsLoading(true);
     try {
       const redirected = await signIn(values.email, values.password);
-      if (!redirected) setIsLoading(false);
+      if (redirected) {
+        navigate(from, { replace: true });
+      } else {
+        setIsLoading(false);
+      }
     } catch (error: any) {
       loginForm.setError("root", { message: error.message });
       setIsLoading(false);
@@ -63,7 +67,11 @@ export default function Auth() {
     setIsLoading(true);
     try {
       const redirected = await signUp(values.name, values.email, values.password);
-      if (!redirected) setIsLoading(false);
+      if (redirected) {
+        navigate(from, { replace: true });
+      } else {
+        setIsLoading(false);
+      }
     } catch (error: any) {
       registerForm.setError("root", { message: error.message });
       setIsLoading(false);

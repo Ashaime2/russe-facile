@@ -83,10 +83,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, pass: string) => {
+    console.log("[Auth] signIn started", { email });
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: pass,
     });
+    console.log("[Auth] signIn Supabase response", { data, error });
     
     if (error) {
       if (error.message.includes('Invalid login credentials')) {
@@ -95,18 +97,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       throw new Error(error.message);
     }
     
+    console.log("[Auth] Mapping user...");
     const mappedUser = mapSupabaseUser(data.user);
+    console.log("[Auth] Hydrating from cloud...");
     await hydrateFromCloud(data.user.id);
+    console.log("[Auth] Setting user state...");
     setUser(mappedUser);
     toast.success(`Heureux de vous revoir !`);
     
-    
-    // Hard redirect pour réinitialiser complètement l'application et les hooks locaux
-    window.location.href = '/dashboard';
+    console.log("[Auth] signIn finished successfully");
     return true;
   };
 
   const signUp = async (name: string, email: string, pass: string) => {
+    console.log("[Auth] signUp started", { name, email });
     const { data, error } = await supabase.auth.signUp({
       email,
       password: pass,
@@ -116,6 +120,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     });
+    console.log("[Auth] signUp Supabase response", { data, error });
 
     if (error) {
       if (error.message.includes('already registered')) {
@@ -125,12 +130,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     if (data.session) {
+      console.log("[Auth] Session present, hydrating...");
       await hydrateFromCloud(data.user!.id);
+      console.log("[Auth] Setting user state...");
       setUser(mapSupabaseUser(data.user));
       toast.success("Votre compte a été créé avec succès.");
-      window.location.href = '/dashboard';
+      console.log("[Auth] signUp finished successfully");
       return true;
     } else {
+      console.log("[Auth] No session (Email confirmation required)");
       // Cas où email confirmation API est activée sur Supabase
       toast.success("Inscription réussie ! Regardez votre boîte mail (Spam inclus) pour confirmer.");
       return false;
